@@ -119,11 +119,16 @@ ANOVA_design <- function(design, n, mu, sd, r = 0,
   design_factors <- as.numeric(design_factors == "w") #if within design, set value to 1, otherwise to 0
 
   # get factornames, labelnameslist and design_list from factor_levels and labelnames
+  ## for testing
+  #factor_levels <- c(2,2,2,2)
+  #labelnames <- c("A", "A1", "A2", "B", "B1", "B2",
+  #                "C", "C1", "C2", "D", "D1", "D2")
   factorname_ids <- cumsum(factor_levels + 1) - factor_levels
   labelnames_ids <- setdiff(1:length(labelnames), factorname_ids)
   factornames <- labelnames[factorname_ids]
   labelnameslist <- split(labelnames[labelnames_ids], 
                           rep(factornames, factor_levels))
+  # make sure factors and labels stay in the specified order
   labelnameslist <- lapply(labelnameslist[factornames], 
                            function(x) {factor(x, levels = x)})
   design_list <- do.call(paste, c(tidyr::crossing(!!!labelnameslist), sep = "_"))
