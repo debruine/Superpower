@@ -113,38 +113,21 @@ ANOVA_design <- function(design, n, mu, sd, r = 0,
 
   #Count number of factors in design
   factors <- length(factor_levels)
-
-  #Get factor names and labelnameslist
-  labelnames1 <- labelnames[(1 + 1):(1+factor_levels[1])]
-  if(factors > 1){labelnames2 <- labelnames[(factor_levels[1] + 3):((factor_levels[1] + 3) + factor_levels[2] - 1)]}
-  if(factors > 2){labelnames3 <- labelnames[(factor_levels[2] + factor_levels[1] + 4):((factor_levels[2] + factor_levels[1] + 4) + factor_levels[3] - 1)]}
-
-  factornames1 <- labelnames[1]
-  if(factors > 1){factornames2 <- labelnames[factor_levels[1] + 2]}
-  if(factors > 2){factornames3 <- labelnames[factor_levels[2] + factor_levels[1] + 3]}
-
-  if(factors == 1){labelnameslist <- list(labelnames1)}
-  if(factors == 2){labelnameslist <- list(labelnames1,labelnames2)}
-  if(factors == 3){labelnameslist <- list(labelnames1,labelnames2,labelnames3)}
-
-  if(factors == 1){factornames <- c(factornames1)}
-  if(factors == 2){factornames <- c(factornames1,factornames2)}
-  if(factors == 3){factornames <- c(factornames1,factornames2,factornames3)}
-
+  
   #Specify within/between factors in design: Factors that are within are 1, between 0
   design_factors <- strsplit(gsub("[^A-Za-z]","",design),"",fixed = TRUE)[[1]]
   design_factors <- as.numeric(design_factors == "w") #if within design, set value to 1, otherwise to 0
 
-  #Specify design list (similar as below)
-  xxx <- data.frame(matrix(NA, nrow = prod(factor_levels), ncol = 0))
-  for(j in 1:factors){
-    xxx <- cbind(xxx, as.factor(unlist(rep(as.list(paste(labelnameslist[[j]],
-                                                         sep="_")),
-                                           each = prod(factor_levels)/prod(factor_levels[1:j]),
-                                           times = prod(factor_levels)/prod(factor_levels[j:factors])
-    ))))
-  }
-  design_list <- as.character(interaction(xxx[, 1:factors], sep = "_")) #create a new condition variable combine 2 columns (interaction is a cool function!)
+  # get factornames, labelnameslist and design_list from factor_levels and labelnames
+  factorname_ids <- cumsum(factor_levels + 1) - factor_levels
+  labelnames_ids <- setdiff(1:length(labelnames), factorname_ids)
+  factornames <- labelnames[factorname_ids]
+  labelnameslist <- split(labelnames[labelnames_ids], 
+                          rep(factornames, factor_levels))
+  labelnameslist <- lapply(labelnameslist[factornames], 
+                           function(x) {factor(x, levels = x)})
+  design_list <- do.call(paste, c(tidyr::crossing(!!!labelnameslist), sep = "_"))
+  labelnameslist <- unname(lapply(labelnameslist, as.character)) # remove names so tests pass
 
   ###############
   # 3. Create Correlation and Covariance Matrix ----
